@@ -256,29 +256,43 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     usage = "usage: %prog [options]"
 
-    parser.add_option('-g', '--gallery',
-                  action="store_true",
-                  dest="gallery",
-                  default=False,
-                  help="generate a local HTML gallery",
-                  )
-    parser.add_option('-e', '--exif',
-                  action="store_true",
-                  dest="exif",
-                  default=False,
-                  help="write flickr data (title, description etc) as EXIF tags",
-                  )
     parser.add_option('-o', '--output_dir',
                   action="store",
                   dest="output_dir",
                   help="set the local directory where you want to store your pictures",
+                  )
+    parser.add_option('-e', '--metadata-exif',
+                  action="store_true",
+                  dest="exif",
+                  default=False,
+                  help="store flickr metadata (title, description etc) as EXIF tags in your local files [default: %default]",
+                  )
+    parser.add_option('-x', '--metadata-xml',
+                  action="store_true",
+                  dest="xml",
+                  default=False,
+                  help="store metadata as default flickr XML files [default: %default]",
+                  )
+    parser.add_option('-u', '--metadata-update',
+                  action="store_true",
+                  dest="update",
+                  default=False,
+                  help="update flickr metadata to your local files. Use this option with -x and/or -e [default: %default]",
+                  )
+    parser.add_option('-g', '--html-gallery',
+                  action="store_true",
+                  dest="gallery",
+                  default=False,
+                  help="generate a local HTML gallery (it uses lazygal) [default: %default]",
                   )
     (options, args) = parser.parse_args()
     try:
         os.chdir(options.output_dir)
     except:
         parser.error("use -o to specify a directory")
-        sys.exit(1)
+
+    if options.update and (not options.exif and not options.xml):
+        parser.error("please choose at least one way to store your metadata. Use -e (exif) and/or -x (xml)")
 
     # First things first, see if we have a cached user and auth-token
     try:
@@ -368,12 +382,6 @@ if __name__ == '__main__':
             # Grab the photos
             for photo in dom.getElementsByTagName("photo"):
 
-                #print getmetadata(photo.getAttribute("id"), config["token"])["title"]
-                #print getmetadata(photo.getAttribute("id"), config["token"])["desc"]
-                #print getmetadata(photo.getAttribute("id"), config["token"])["tags"]
-                #print getmetadata(photo.getAttribute("id"), config["token"])["urls"]
-                #continue
-
                 # Tell the user we're grabbing the file
                 print photo.getAttribute("title").encode("utf8") + " ... in set ... " + dir
 
@@ -386,6 +394,10 @@ if __name__ == '__main__':
                 # Skip files that exist
                 if os.access(target, os.R_OK):
                     inodes[photoid] = target
+                    # Write EXIF metadata if user wants to update it
+                    if options.update is True and options.exif is True:
+                        writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
+                        writeEXIF(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
                     continue
 
                 # Look it up in our dictionary of inodes first
@@ -395,9 +407,10 @@ if __name__ == '__main__':
                 else:
                     inodes[photoid] = getphoto(photo.getAttribute("id"), config["token"], target)
 
-#                print "Tagging " + target + " with " + getmetadata(photo.getAttribute("id"), config["token"])["title"]
-                writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
-                writeEXIF(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                # Writing EXIF metadata if user wants to
+                if options.exif is True:
+                    writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
+                    writeEXIF(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
 
             # Move on the next page
             page = page + 1
