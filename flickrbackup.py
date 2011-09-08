@@ -26,6 +26,7 @@ import cPickle
 import hashlib
 import sys
 import os
+import optparse
 
 API_KEY       = "e224418b91b4af4e8cdb0564716fa9bd"
 SHARED_SECRET = "7cddb9c9716501a0"
@@ -194,15 +195,30 @@ def getphoto(id, token, filename):
         return filename
     except:
         print "Failed to retrieve photo id " + id
-    
+
 ######## Main Application ##########
 if __name__ == '__main__':
 
-    # The first, and only argument needs to be a directory
+    # Parse a few arguments
+    parser = optparse.OptionParser()
+    usage = "usage: %prog [options]"
+    
+    parser.add_option('-g', '--gallery', 
+                  action="store_true",
+                  dest="gallery", 
+                  default=False,
+                  help="generate a local HTML gallery",
+                  )
+    parser.add_option('-o', '--output_dir', 
+                  action="store",
+                  dest="output_dir", 
+                  help="set the local directory where you want to store your pictures",
+                  )
+    (options, args) = parser.parse_args()
     try:
-        os.chdir(sys.argv[1])
+        os.chdir(options.output_dir)
     except:
-        print "usage: %s directory" % sys.argv[0] 
+        parser.error("use -o to specify a directory")
         sys.exit(1)
 
     # First things first, see if we have a cached user and auth-token
