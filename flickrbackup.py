@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
 #
-# FlickrTouchr - a simple python script to grab all your photos from flickr, 
+# FlickrBackup - a simple python script to grab all your photos from Flickr, 
 #                dump into a directory - organised into folders by set - 
 #                along with any favourites you have saved.
 #
-#                You can then sync the photos to an iPod touch.
+# Version: 1.2
 #
-# Version:       1.2
+# Original Author: colm - AT - allcosts.net  - Colm MacCarthaigh - 2008-01-21
 #
-# Original Author:	colm - AT - allcosts.net  - Colm MacCarthaigh - 2008-01-21
+# Modified by: Dan Benjamin - http://hivelogic.com							
 #
-# Modified by:			Dan Benjamin - http://hivelogic.com										
+# Forked, renamed and refactored by Tiago Bortoletto Vaz <tiago@debian.org> 
+# in Thu Sep  8 00:04:58 UTC 2011
 #
-# License:       		Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0.html
+# License: Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0.html
 #
 
 import xml.dom.minidom
@@ -283,9 +284,11 @@ if __name__ == '__main__':
 
             # Parse the XML
             dom = xml.dom.minidom.parse(response)
+            # print dom.toprettyxml(encoding="utf8")
 
             # Get the total
-            pages = int(dom.getElementsByTagName("photo")[0].parentNode.getAttribute("pages"))
+            if dom.getElementsByTagName("photo"):
+                pages = int(dom.getElementsByTagName("photo")[0].parentNode.getAttribute("pages"))
 
             # Grab the photos
             for photo in dom.getElementsByTagName("photo"):
