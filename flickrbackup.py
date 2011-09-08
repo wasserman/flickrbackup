@@ -40,6 +40,11 @@ def getText(nodelist):
         if node.nodeType == node.TEXT_NODE:
             rc = rc + node.data
     return rc.encode("utf-8")
+#
+# Normalize input text to ASCII
+#
+def normalizeToASCII(text):
+    return unicodedata.normalize('NFKD', text.decode("utf-8", "ignore")).encode('ASCII', 'ignore')
 
 #
 # Get the frob based on our API_KEY and shared secret
@@ -179,7 +184,6 @@ def getphoto(id, token, filename):
         else:
           print "Failed to get original for photo id " + id
 
-
         # Free the DOM memory
         dom.unlink()
 
@@ -195,6 +199,42 @@ def getphoto(id, token, filename):
         return filename
     except:
         print "Failed to retrieve photo id " + id
+
+#
+# Grab Photo Metadata from the server
+# code based on flickrtouchr fork from Greg Grossmeier
+# https://code.launchpad.net/~greg.grossmeier/+junk/flickrtouchr
+#
+def getmetadata(id, token):
+    try:
+        # Contruct a request to find the sizes
+        url  = "http://api.flickr.com/services/rest/?method=flickr.photos.getInfo"
+        url += "&photo_id=" + id
+
+        # Sign the request
+        url = flickrsign(url, token)
+
+        # Make the request
+        response = urllib2.urlopen(url)
+
+        # Parse the XML
+        dom = xml.dom.minidom.parse(response)
+
+        # Get the Info
+        #title = normalizeToASCII(getText(dom.getElementsByTagName("title")[0].childNodes))
+        title = getText(dom.getElementsByTagName("title")[0].childNodes)
+        description = getText(dom.getElementsByTagName("description")[0].childNodes)
+        tags = getText(dom.getElementsByTagName("tags")[0].childNodes)
+        urls = getText(dom.getElementsByTagName("urls")[0].childNodes)
+
+        metadata = {'title' : title, 'desc' : description, 'tags' : tags, 'urls' : urls}
+
+        # Free the DOM memory
+        dom.unlink()
+
+        return metadata
+    except:
+        print "Failed to retrieve photo metadata from photo id " + id
 
 ######## Main Application ##########
 if __name__ == '__main__':
@@ -256,7 +296,7 @@ if __name__ == '__main__':
     for set in sets:
         pid = set.getAttribute("id")
         dir = getText(set.getElementsByTagName("title")[0].childNodes)
-        dir = unicodedata.normalize('NFKD', dir.decode("utf-8", "ignore")).encode('ASCII', 'ignore') # Normalize to ASCII
+        dir = normalizeToASCII(dir)
 
         # Build the list of photos
         url   = "http://api.flickr.com/services/rest/?method=flickr.photosets.getPhotos"
@@ -308,6 +348,13 @@ if __name__ == '__main__':
 
             # Grab the photos
             for photo in dom.getElementsByTagName("photo"):
+               
+                print getmetadata(photo.getAttribute("id"), config["token"])["title"]
+                print getmetadata(photo.getAttribute("id"), config["token"])["desc"]
+                print getmetadata(photo.getAttribute("id"), config["token"])["tags"]
+                print getmetadata(photo.getAttribute("id"), config["token"])["urls"]
+                continue
+
                 # Tell the user we're grabbing the file
                 print photo.getAttribute("title").encode("utf8") + " ... in set ... " + dir
 
@@ -328,6 +375,7 @@ if __name__ == '__main__':
                     os.link(inodes[photoid], target)
                 else:
                     inodes[photoid] = getphoto(photo.getAttribute("id"), config["token"], target)
+
 
             # Move on the next page
             page = page + 1
