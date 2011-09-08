@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #
-# FlickrBackup - a simple python script to grab all your photos from Flickr, 
+# flickrbackup - a simple python script to grab all your photos from flickr, 
 #                dump into a directory - organised into folders by set - 
 #                along with any favourites you have saved.
 #
@@ -27,6 +27,7 @@ import hashlib
 import sys
 import os
 import optparse
+import pyexiv2
 
 API_KEY       = "e224418b91b4af4e8cdb0564716fa9bd"
 SHARED_SECRET = "7cddb9c9716501a0"
@@ -61,14 +62,14 @@ def getfrob():
     try:
         # Make the request and extract the frob
         response = urllib2.urlopen(url)
-    
+
         # Parse the XML
         dom = xml.dom.minidom.parse(response)
 
         # get the frob
         frob = getText(dom.getElementsByTagName("frob")[0].childNodes)
 
-        # Free the DOM 
+        # Free the DOM
         dom.unlink()
 
         # Return the frob
@@ -90,13 +91,13 @@ def froblogin(frob, perms):
     url   += "&frob=" + frob + "&api_sig=" + hash
 
     # Tell the user what's happening
-    print "In order to allow FlickrTouchr to read your photos and favourites"
+    print "In order to allow flickrbackup to read your photos and favourites"
     print "you need to allow the application. Please press return when you've"
     print "granted access at the following url (which should have opened"
     print "automatically)."
     print
     print url
-    print 
+    print
     print "Waiting for you to press return"
 
     # We now have a login url, open it in a web-browser
@@ -108,7 +109,7 @@ def froblogin(frob, perms):
     # Now, try and retrieve a token
     string = SHARED_SECRET + "api_key" + API_KEY + "frob" + frob + "methodflickr.auth.getToken"
     hash   = hashlib.md5(string).digest().encode("hex")
-    
+
     # Formulate the request
     url    = "http://api.flickr.com/services/rest/?method=flickr.auth.getToken"
     url   += "&api_key=" + API_KEY + "&frob=" + frob
@@ -118,7 +119,7 @@ def froblogin(frob, perms):
     try:
         # Make the request and extract the frob
         response = urllib2.urlopen(url)
-    
+
         # Parse the XML
         dom = xml.dom.minidom.parse(response)
 
@@ -134,17 +135,17 @@ def froblogin(frob, perms):
     except:
         raise "Login failed"
 
-# 
+#
 # Sign an arbitrary flickr request with a token
-# 
+#
 def flickrsign(url, token):
     query  = urlparse.urlparse(url).query
     query += "&api_key=" + API_KEY + "&auth_token=" + token
-    params = query.split('&') 
+    params = query.split('&')
 
     # Create the string to hash
     string = SHARED_SECRET
-    
+
     # Sort the arguments alphabettically
     params.sort()
     for param in params:
@@ -153,7 +154,7 @@ def flickrsign(url, token):
 
     # Now, append the api_key, and the api_sig args
     url += "&api_key=" + API_KEY + "&auth_token=" + token + "&api_sig=" + hash
-    
+
     # Return the signed url
     return url
 
@@ -165,13 +166,13 @@ def getphoto(id, token, filename):
         # Contruct a request to find the sizes
         url  = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes"
         url += "&photo_id=" + id
-    
+
         # Sign the request
         url = flickrsign(url, token)
-    
+
         # Make the request
         response = urllib2.urlopen(url)
-        
+
         # Parse the XML
         dom = xml.dom.minidom.parse(response)
 
@@ -190,7 +191,7 @@ def getphoto(id, token, filename):
         # Grab the image file
         response = urllib2.urlopen(imgurl)
         data = response.read()
-    
+
         # Save the file!
         fh = open(filename, "w")
         fh.write(data)
@@ -236,22 +237,40 @@ def getmetadata(id, token):
     except:
         print "Failed to retrieve photo metadata from photo id " + id
 
+#
+# Write metadata to EXIF
+#
+def writeEXIF(imagepath,key,value):
+    try:
+        metadata = pyexiv2.ImageMetadata(imagepath)
+        metadata.read()
+        metadata[key] = value
+        metadata.write()
+    except:
+        print "Failed to write value %s in EXIF tag %s to photo id %s" % (value, key, imagepath)
+
 ######## Main Application ##########
 if __name__ == '__main__':
 
     # Parse a few arguments
     parser = optparse.OptionParser()
     usage = "usage: %prog [options]"
-    
-    parser.add_option('-g', '--gallery', 
+
+    parser.add_option('-g', '--gallery',
                   action="store_true",
-                  dest="gallery", 
+                  dest="gallery",
                   default=False,
                   help="generate a local HTML gallery",
                   )
-    parser.add_option('-o', '--output_dir', 
+    parser.add_option('-e', '--exif',
+                  action="store_true",
+                  dest="exif",
+                  default=False,
+                  help="write flickr data (title, description etc) as EXIF tags",
+                  )
+    parser.add_option('-o', '--output_dir',
                   action="store",
-                  dest="output_dir", 
+                  dest="output_dir",
                   help="set the local directory where you want to store your pictures",
                   )
     (options, args) = parser.parse_args()
@@ -270,7 +289,7 @@ if __name__ == '__main__':
     # We don't - get a new one
     except:
         (user, token) = froblogin(getfrob(), "read")
-        config = { "version":1 , "user":user, "token":token }  
+        config = { "version":1 , "user":user, "token":token }
 
         # Save it for future use
         cache = open("touchr.frob.cache", "w")
@@ -284,7 +303,7 @@ if __name__ == '__main__':
 
     # get the result
     response = urllib2.urlopen(url)
-    
+
     # Parse the XML
     dom = xml.dom.minidom.parse(response)
 
@@ -304,7 +323,7 @@ if __name__ == '__main__':
 
         # Append to our list of urls
         urls.append( (url , dir) )
-    
+
     # Free the DOM memory
     dom.unlink()
 
@@ -329,7 +348,7 @@ if __name__ == '__main__':
         url += "&per_page=500"
         pages = page = 1
 
-        while page <= pages: 
+        while page <= pages:
             request = url + "&page=" + str(page)
 
             # Sign the url
@@ -348,12 +367,12 @@ if __name__ == '__main__':
 
             # Grab the photos
             for photo in dom.getElementsByTagName("photo"):
-               
-                print getmetadata(photo.getAttribute("id"), config["token"])["title"]
-                print getmetadata(photo.getAttribute("id"), config["token"])["desc"]
-                print getmetadata(photo.getAttribute("id"), config["token"])["tags"]
-                print getmetadata(photo.getAttribute("id"), config["token"])["urls"]
-                continue
+
+                #print getmetadata(photo.getAttribute("id"), config["token"])["title"]
+                #print getmetadata(photo.getAttribute("id"), config["token"])["desc"]
+                #print getmetadata(photo.getAttribute("id"), config["token"])["tags"]
+                #print getmetadata(photo.getAttribute("id"), config["token"])["urls"]
+                #continue
 
                 # Tell the user we're grabbing the file
                 print photo.getAttribute("title").encode("utf8") + " ... in set ... " + dir
@@ -368,7 +387,7 @@ if __name__ == '__main__':
                 if os.access(target, os.R_OK):
                     inodes[photoid] = target
                     continue
-                
+
                 # Look it up in our dictionary of inodes first
                 if photoid in inodes and inodes[photoid] and os.access(inodes[photoid], os.R_OK):
                     # woo, we have it already, use a hard-link
@@ -376,6 +395,9 @@ if __name__ == '__main__':
                 else:
                     inodes[photoid] = getphoto(photo.getAttribute("id"), config["token"], target)
 
+#                print "Tagging " + target + " with " + getmetadata(photo.getAttribute("id"), config["token"])["title"]
+                writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
+                writeEXIF(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
 
             # Move on the next page
             page = page + 1
