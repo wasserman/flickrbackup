@@ -1,0 +1,17 @@
+Source: flickrbackup
+Section: utils
+Priority: optional
+Maintainer: Tiago Bortoletto Vaz
+Build-Depends-Indep: debhelper (>= 6.0.7~), python, help2man
+Standards-Version: 3.9.2
+
+Package: flickrbackup
+Architecture: all
+Depends: python
+Description: Simple tool to perform a backup of your photos in flickr
+ flickrbackup is a simple python script which make a local copy of all your
+ pictures hosted in flickr.com.
+ .
+ It downloads the pictures and organize them using your set names. flickrbackup
+ is also able to store title, description, tags and other metadata in a XML
+ file or write them to the EXIF data in your local image files.
