@@ -247,7 +247,7 @@ def writeEXIF(imagepath,key,value):
         metadata[key] = value
         metadata.write()
     except:
-        print "Failed to write value %s in EXIF tag %s to photo id %s" % (value, key, imagepath)
+        print "Failed to write EXIF tag %s to photo id %s" % (key, imagepath)
 
 ######## Main Application ##########
 if __name__ == '__main__':
