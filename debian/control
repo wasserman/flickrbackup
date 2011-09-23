@@ -2,12 +2,12 @@ Source: flickrbackup
 Section: utils
 Priority: optional
 Maintainer: Tiago Bortoletto Vaz <tiago@debian.org>
-Build-Depends-Indep: debhelper (>= 6.0.7~), help2man
+Build-Depends-Indep: debhelper (>= 7.0.50~), help2man
 Standards-Version: 3.9.2
 
 Package: flickrbackup
 Architecture: all
-Depends: python
+Depends: python, ${misc:Depends}
 Description: Simple tool to perform a backup of your photos in flickr
  flickrbackup is a simple python script which make a locals copy of all your
  pictures hosted in flickr.com.
