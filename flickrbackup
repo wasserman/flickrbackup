@@ -5,14 +5,12 @@
 #                dump into a directory - organised into folders by set -
 #                along with any favourites you have saved.
 #
-# Version: 1.2
-#
 # Original Author: colm - AT - allcosts.net  - Colm MacCarthaigh - 2008-01-21
 #
 # Modified by: Dan Benjamin - http://hivelogic.com
 #
-# Forked, renamed and refactored by Tiago Bortoletto Vaz <tiago@debian.org>
-# in Thu Sep  8 00:04:58 UTC 2011
+# Forked, renamed and (being) refactored by Tiago Bortoletto Vaz
+# <tiago@debian.org> in Thu Sep  8 00:04:58 UTC 2011
 #
 # License: Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0.html
 #
@@ -383,7 +381,7 @@ if __name__ == '__main__':
             for photo in dom.getElementsByTagName("photo"):
 
                 # Tell the user we're grabbing the file
-                print "Getting " + photo.getAttribute("title").encode("utf8") + " in set " + dir
+                print 'Getting "' + photo.getAttribute("title").encode("utf8") + '" in set "' + dir + '"'
 
                 # Grab the id
                 photoid = photo.getAttribute("id")

@@ -1,0 +1,15 @@
+flickrbackup - backup your flickr photos
+----------------------------------------
+
+flickrbackup is a simple python script which allows you to save a local copy of
+your flickr photo sets. Run it with -h to see the options.
+
+dependencies
+------------
+
+python, 
+
+simple usage
+------------
+
+./flickrbackup -o <outputdir>
