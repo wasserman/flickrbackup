@@ -1,8 +1,8 @@
 Source: flickrbackup
 Section: utils
 Priority: optional
-Maintainer: Tiago Bortoletto Vaz
-Build-Depends-Indep: debhelper (>= 6.0.7~), python, help2man
+Maintainer: Tiago Bortoletto Vaz <tiago@debian.org>
+Build-Depends-Indep: debhelper (>= 6.0.7~), help2man
 Standards-Version: 3.9.2
 
 Package: flickrbackup
