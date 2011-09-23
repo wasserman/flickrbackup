@@ -13,5 +13,5 @@ Description: Simple tool to perform a backup of your photos in flickr
  pictures hosted in flickr.com.
  .
  It downloads the pictures and organize them using your set names. flickrbackup
- is also able to store title, description, tags and other metadata in a XML
- file or write them to the EXIF data in your local image files.
+ is also able to store title, description, tags and other metadata from flickr
+ sets as EXIF data.
