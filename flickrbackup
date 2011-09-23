@@ -14,7 +14,6 @@
 #
 # License: Apache 2.0 - http://www.apache.org/licenses/LICENSE-2.0.html
 #
-# Version: 0.1
 
 import xml.dom.minidom
 import webbrowser
@@ -251,9 +250,13 @@ def writeEXIF(imagepath,key,value):
 ######## Main Application ##########
 if __name__ == '__main__':
 
+    program = "flickrbackup"
+    version = "%prog 0.1"
+    usage = "Usage: %prog [OPTIONS] -o OUTPUT_DIR"
+    description = "Backup your flickr photos."
+
     # Parse a few arguments
-    parser = optparse.OptionParser()
-    usage = "usage: %prog [options]"
+    parser = optparse.OptionParser(usage=usage, version=version, description=description, prog=program)
 
     parser.add_option('-o', '--output_dir',
                   action="store",
@@ -288,7 +291,7 @@ if __name__ == '__main__':
     try:
         os.chdir(options.output_dir)
     except:
-        parser.error("use -o to specify a directory")
+        parser.error("use -o to specify a directory\n")
 
     if options.update and (not options.exif and not options.xml):
         parser.error("please choose at least one way to store your metadata. Use -e (exif) and/or -x (xml)")
