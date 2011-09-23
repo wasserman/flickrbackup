@@ -9,7 +9,7 @@ Package: flickrbackup
 Architecture: all
 Depends: python
 Description: Simple tool to perform a backup of your photos in flickr
- flickrbackup is a simple python script which make a local copy of all your
+ flickrbackup is a simple python script which make a locals copy of all your
  pictures hosted in flickr.com.
  .
  It downloads the pictures and organize them using your set names. flickrbackup
