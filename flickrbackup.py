@@ -29,8 +29,8 @@ import os
 import optparse
 import pyexiv2
 
-API_KEY       = "e224418b91b4af4e8cdb0564716fa9bd"
-SHARED_SECRET = "7cddb9c9716501a0"
+API_KEY       = "5c94226d43774e47e67b0b8578a95a40"
+SHARED_SECRET = "dfbd14bafe4e8f06"
 
 #
 # Utility functions for dealing with flickr authentication
@@ -283,7 +283,7 @@ if __name__ == '__main__':
                   action="store_true",
                   dest="gallery",
                   default=False,
-                  help="generate a local HTML gallery (it uses lazygal) [default: %default]",
+                  help="generate a local HTML gallery [NOT IMPLEMENTED]",
                   )
     (options, args) = parser.parse_args()
     try:
@@ -296,7 +296,7 @@ if __name__ == '__main__':
 
     # First things first, see if we have a cached user and auth-token
     try:
-        cache = open("touchr.frob.cache", "r")
+        cache = open(".flickrbackup.frob.cache", "r")
         config = cPickle.load(cache)
         cache.close()
 
@@ -306,7 +306,7 @@ if __name__ == '__main__':
         config = { "version":1 , "user":user, "token":token }
 
         # Save it for future use
-        cache = open("touchr.frob.cache", "w")
+        cache = open(".flickrbackup.frob.cache", "w")
         cPickle.dump(config, cache)
         cache.close()
 
@@ -383,7 +383,7 @@ if __name__ == '__main__':
             for photo in dom.getElementsByTagName("photo"):
 
                 # Tell the user we're grabbing the file
-                print photo.getAttribute("title").encode("utf8") + " ... in set ... " + dir
+                print "Getting " + photo.getAttribute("title").encode("utf8") + " in set " + dir
 
                 # Grab the id
                 photoid = photo.getAttribute("id")
@@ -394,6 +394,7 @@ if __name__ == '__main__':
                 # Skip files that exist
                 if os.access(target, os.R_OK):
                     inodes[photoid] = target
+                    print target + " exists. Skipping download..."
                     # Write EXIF metadata if user wants to update it
                     if options.update is True and options.exif is True:
                         writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
