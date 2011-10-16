@@ -39,6 +39,17 @@ def getText(nodelist):
         if node.nodeType == node.TEXT_NODE:
             rc = rc + node.data
     return rc.encode("utf-8")
+
+#
+# Utility function for getting flickr value lists, such as tags and urls.
+#
+def getList(nodelist):
+    valueList = []
+    for node in nodelist:
+        if node.nodeType == node.ELEMENT_NODE:
+            valueList.append(node.firstChild.nodeValue)
+    return valueList 
+
 #
 # Normalize input text to ASCII
 #
@@ -177,8 +188,11 @@ def getphoto(id, token, filename):
         # Get the list of sizes
         sizes =  dom.getElementsByTagName("size")
 
+        # If test mode then grab the smallest image
+        if (options.test):
+          imgurl = sizes[0].getAttribute("source")
         # Grab the original if it exists
-        if (sizes[-1].getAttribute("label") == "Original"):
+        elif (sizes[-1].getAttribute("label") == "Original"):
           imgurl = sizes[-1].getAttribute("source")
         else:
           print "Failed to get original for photo id " + id
@@ -223,8 +237,8 @@ def getmetadata(id, token):
         #title = normalizeToASCII(getText(dom.getElementsByTagName("title")[0].childNodes))
         title = getText(dom.getElementsByTagName("title")[0].childNodes)
         description = getText(dom.getElementsByTagName("description")[0].childNodes)
-        tags = getText(dom.getElementsByTagName("tags")[0].childNodes)
-        urls = getText(dom.getElementsByTagName("urls")[0].childNodes)
+        tags = getList(dom.getElementsByTagName("tags")[0].childNodes)
+        urls = getList(dom.getElementsByTagName("urls")[0].childNodes)
 
         metadata = {'title' : title, 'desc' : description, 'tags' : tags, 'urls' : urls}
 
@@ -286,6 +300,12 @@ if __name__ == '__main__':
                   dest="gallery",
                   default=False,
                   help="generate a local HTML gallery [NOT IMPLEMENTED]",
+    )
+    parser.add_option('-t', '--test',
+                  action="store_true",
+                  dest="test",
+                  default=False,
+                  help="enable test mode.  Currently this will just download small images to increase coverage",
                   )
     (options, args) = parser.parse_args()
     try:
