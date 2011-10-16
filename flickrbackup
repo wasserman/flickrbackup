@@ -252,7 +252,7 @@ def getmetadata(id, token):
 #
 # Write metadata to EXIF
 #
-def writeEXIF(imagepath,key,value):
+def writeMeta(imagepath,key,value):
     try:
         metadata = pyexiv2.ImageMetadata(imagepath)
         metadata.read()
@@ -282,6 +282,12 @@ if __name__ == '__main__':
                   dest="exif",
                   default=False,
                   help="store flickr metadata (title, description etc) as EXIF tags in your local files [default: %default]",
+                  )
+    parser.add_option('-a', '--metadata-xmp',
+                  action="store_true",
+                  dest="xmp",
+                  default=False,
+                  help="store flickr metadata (title, description etc) as Adobe XMP tags in your local files [default: %default]",
                   )
     parser.add_option('-x', '--metadata-xml',
                   action="store_true",
@@ -313,8 +319,9 @@ if __name__ == '__main__':
     except:
         parser.error("use -o to specify a directory\n")
 
-    if options.update and (not options.exif and not options.xml):
-        parser.error("please choose at least one way to store your metadata. Use -e (exif) and/or -x (xml)")
+    if options.update and (not options.exif and not options.xml 
+                           and not options.xmp):
+        parser.error("please choose at least one way to store your metadata.  Use -e (exif) and/or -x (xml) and/or -a (Adobe xmp)")
 
     # First things first, see if we have a cached user and auth-token
     try:
@@ -419,8 +426,15 @@ if __name__ == '__main__':
                     print target + " exists. Skipping download..."
                     # Write EXIF metadata if user wants to update it
                     if options.update is True and options.exif is True:
-                        writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
-                        writeEXIF(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                        writeMeta(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
+                        writeMeta(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                    elif options.update is True and  options.xmp is True:
+                        writeMeta(target,"Xmp.dc.title",{u'x-default': getmetadata(photo.getAttribute("id"), config["token"])["title"]})
+                        writeMeta(target,"Xmp.photoshop.Headline",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                        tags = getmetadata(photo.getAttribute("id"), config["token"])["tags"]
+                        # writing empty tags is bad
+                        if tags:
+                            writeMeta(target,"Xmp.dc.subject",tags)
                     continue
 
                 # Look it up in our dictionary of inodes first
@@ -432,8 +446,15 @@ if __name__ == '__main__':
 
                 # Writing EXIF metadata if user wants to
                 if options.exif is True:
-                    writeEXIF(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
-                    writeEXIF(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                    writeMeta(target,"Exif.Image.ImageDescription",getmetadata(photo.getAttribute("id"), config["token"])["title"])
+                    writeMeta(target,"Exif.Photo.UserComment",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                elif options.xmp is True:
+                    writeMeta(target,"Xmp.dc.title",{u'x-default': getmetadata(photo.getAttribute("id"), config["token"])["title"]})
+                    writeMeta(target,"Xmp.photoshop.Headline",getmetadata(photo.getAttribute("id"), config["token"])["desc"])
+                    tags = getmetadata(photo.getAttribute("id"), config["token"])["tags"]
+                    # writing empty tags is bad
+                    if tags:
+                        writeMeta(target,"Xmp.dc.subject",tags)
 
             # Move on the next page
             page = page + 1
