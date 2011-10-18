@@ -26,6 +26,7 @@ import sys
 import os
 import optparse
 import pyexiv2
+import datetime
 
 API_KEY       = "5c94226d43774e47e67b0b8578a95a40"
 SHARED_SECRET = "dfbd14bafe4e8f06"
@@ -239,8 +240,12 @@ def getmetadata(id, token):
         description = getText(dom.getElementsByTagName("description")[0].childNodes)
         tags = getList(dom.getElementsByTagName("tags")[0].childNodes)
         urls = getList(dom.getElementsByTagName("urls")[0].childNodes)
+        date_taken = dom.getElementsByTagName('dates')[0].getAttribute('taken')
+        date_taken_datetime = datetime.datetime.strptime(date_taken, '%Y-%m-%d %H:%M:%S')
 
-        metadata = {'title' : title, 'desc' : description, 'tags' : tags, 'urls' : urls}
+
+        metadata = {'title' : title, 'desc' : description, 'tags' : tags,
+                'urls' : urls, 'date_taken': date_taken_datetime }
 
         # Free the DOM memory
         dom.unlink()
@@ -435,6 +440,9 @@ if __name__ == '__main__':
                         # writing empty tags is bad
                         if tags:
                             writeMeta(target,"Xmp.dc.subject",tags)
+                        # if test then ensure original date/time is in header
+                        if options.test:
+                            writeMeta(target,"Exif.Photo.DateTimeOriginal",getmetadata(photo.getAttribute("id"), config["token"])["date_taken"])
                     continue
 
                 # Look it up in our dictionary of inodes first
@@ -455,6 +463,9 @@ if __name__ == '__main__':
                     # writing empty tags is bad
                     if tags:
                         writeMeta(target,"Xmp.dc.subject",tags)
+                    # if test then ensure original date/time is in header
+                    if options.test:
+                        writeMeta(target,"Exif.Photo.DateTimeOriginal",getmetadata(photo.getAttribute("id"), config["token"])["date_taken"])
 
             # Move on the next page
             page = page + 1
